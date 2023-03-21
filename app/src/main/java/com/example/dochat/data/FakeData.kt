@@ -19,7 +19,7 @@ val initialMessages = listOf(
     Message(
         author = "me",
         timestamp = "8:05 PM",
-        content = "大家好，我叫dorunto"
+        content = "大家好，我叫dorunto，是个主题设计师，也是独立开发者，希望可以在未来将学到的编程知识，将想要做的想法编程现实，加油吧少年！"
     ),
     Message(
         author = "瑞青",

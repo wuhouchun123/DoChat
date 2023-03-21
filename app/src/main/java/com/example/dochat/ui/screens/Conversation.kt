@@ -88,75 +88,15 @@ fun Messages(
         reverseLayout = true
     ) {
         for (index in messages.indices) {
+            val message = messages[index]
+            val isUserMe = message.author == "me"
+            val preAuthor = messages.getOrNull(index - 1)?.author
+            val nextAuthor = messages.getOrNull(index + 1)?.author
+            val isFirstMessageByAuthor = preAuthor != message.author
+            val isLastMessageByAuthor = nextAuthor != message.author
+
             item {
-                Spacer(modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    val borderColor = if (messages[index].author == "me") {
-                        Color.Blue
-                    } else {
-                        Color.Cyan
-                    }
-                    //头像
-                    Box(
-                        modifier = Modifier.fillMaxHeight()
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            modifier = Modifier
-                        ) {
-                            Image(
-                                modifier = Modifier
-                                    .clickable(onClick = {  })
-                                    .padding(horizontal = 0.dp)
-                                    .size(48.dp)
-                                    .border(1.5.dp, borderColor, CircleShape)
-                                    .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape)
-                                    .clip(CircleShape),
-                                painter = painterResource(id = messages[index].authorImage),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = null,
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    //名字，时间和内容
-                    Column() {
-                        Row(modifier = Modifier.semantics(mergeDescendants = true) {}) {
-                            Text(
-                                text = messages[index].author,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .alignBy(LastBaseline)
-                                    .paddingFrom(LastBaseline, after = 8.dp) // Space to 1st bubble
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = messages[index].timestamp,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.alignBy(LastBaseline),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Surface(
-                            color = Color.Green,
-                            shape = ChatBubbleShape,
-                            modifier = Modifier.padding(end = 16.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier.padding(16.dp,16.dp)
-                            ) {
-                                Text(messages[index].content, style = MaterialTheme.typography.bodyLarge)
-                            }
-                        }
-                    }
-                }
+                Message(msg = message, isUserMe = isUserMe, isFirstMessageByAuthor, isLastMessageByAuthor)
             }
         }
     }
@@ -166,8 +106,7 @@ private val ChatBubbleShape = RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp)
 
 @Composable
 fun Message(
-    onAuthorClick: (String) -> Unit,
-//    msg: Message,
+    msg: Message,
     isUserMe: Boolean,
     isFirstMessageByAuthor: Boolean,
     isLastMessageByAuthor: Boolean
@@ -179,21 +118,26 @@ fun Message(
         //MaterialTheme.colorScheme.tertiary
         Color.Yellow
     }
-
     val spaceBetweenAuthors = if (isLastMessageByAuthor) Modifier.padding(top = 8.dp) else Modifier
     Row(modifier = spaceBetweenAuthors) {
-        if (isLastMessageByAuthor) {
-            // Avatar
+        val borderColor = when(msg.author) {
+            "me" -> Color.Blue
+            "妈妈" -> Color.Yellow
+            "瑞青" -> Color.Magenta
+            else -> Color.Blue
+        }
+        //头像
+        if (isLastMessageByAuthor){
             Image(
                 modifier = Modifier
                     .clickable(onClick = { })
-                    .padding(horizontal = 16.dp)
-                    .size(42.dp)
+                    .padding(horizontal = 12.dp)
+                    .size(48.dp)
                     .border(1.5.dp, borderColor, CircleShape)
-                    .border(3.dp, Color.Blue, CircleShape)
+                    .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape)
                     .clip(CircleShape)
                     .align(Alignment.Top),
-                painter = painterResource(id = R.drawable.music_knob),
+                painter = painterResource(id = msg.authorImage),
                 contentScale = ContentScale.Crop,
                 contentDescription = null,
             )
@@ -201,39 +145,86 @@ fun Message(
             // Space under avatar
             Spacer(modifier = Modifier.width(74.dp))
         }
+        //名字，时间和内容
         AuthorAndTextMessage(
-//            msg = msg,
-            isUserMe = isUserMe,
-            isFirstMessageByAuthor = isFirstMessageByAuthor,
-            isLastMessageByAuthor = isLastMessageByAuthor,
-            authorClicked = onAuthorClick,
+            msg,
+            isUserMe,
+            isFirstMessageByAuthor,
+            isLastMessageByAuthor,
             modifier = Modifier
                 .padding(end = 16.dp)
-                .weight(1f)
-        )
+                .weight(1f))
     }
 }
 
 @Composable
 fun AuthorAndTextMessage(
-//    msg: Message,
+    msg: Message,
     isUserMe: Boolean,
     isFirstMessageByAuthor: Boolean,
     isLastMessageByAuthor: Boolean,
-    authorClicked: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-//        if (isLastMessageByAuthor) {
-//            AuthorNameTimestamp(msg)
-//        }
-//        Messages()
+        Row(modifier = Modifier.semantics(mergeDescendants = true) {}) {
+            if (isLastMessageByAuthor) {
+                Text(
+                    text = msg.author,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier
+                        .alignBy(LastBaseline)
+                        .paddingFrom(LastBaseline, after = 8.dp) // Space to 1st bubble
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = msg.timestamp,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.alignBy(LastBaseline),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        ChatItemBubble(msg, isUserMe, modifier = Modifier.padding(end = 16.dp).weight(1f))
         if (isFirstMessageByAuthor) {
             // Last bubble before next author
             Spacer(modifier = Modifier.height(8.dp))
         } else {
             // Between bubbles
             Spacer(modifier = Modifier.height(4.dp))
+
+        }
+    }
+}
+
+@Composable
+fun ChatItemBubble(
+    msg: Message,
+    isUserMe: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val backgroundBubbleColor = if (isUserMe) {
+        Color(0xFF1546F6)
+    } else {
+        Color(0xFFE2E1EC)
+    }
+    val fontColor = if (isUserMe) {
+        Color.White
+    } else {
+        Color.Black
+    }
+
+    Surface(
+        color = backgroundBubbleColor,
+        shape = ChatBubbleShape
+    ) {
+        Box(
+            modifier = Modifier.padding(16.dp,16.dp)
+        ) {
+            Text(
+                msg.content,
+                style = MaterialTheme.typography.bodyLarge,
+                color = fontColor
+            )
         }
     }
 }
