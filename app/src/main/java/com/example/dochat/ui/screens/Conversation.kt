@@ -65,8 +65,8 @@ fun ConversationContent(
             .fillMaxSize()
             .padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentAlignment = Alignment.TopStart
         ) {
             Messages(
                 messages = uiState.initialMessages
@@ -95,13 +95,14 @@ fun Messages(
                     Box(
                         modifier = Modifier.padding(16.dp,16.dp)
                     ) {
-                        Text(messages[index].content, style = MaterialTheme.typography.bodyMedium)
+                        Text(messages[index].content, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
                 Text(
                     messages[index].author,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp)
                 )
 
             }
@@ -295,7 +296,7 @@ fun userInputText(
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .padding(start = 32.dp),
-                        text = "nimade",
+                        text = "Message #composer",
                         color = Color(0x33222222)
                     )
                 }
@@ -390,7 +391,7 @@ private fun InputSelectorButton(
 ) {
     val backgroundModifier = if (selected) {
         Modifier.background(
-            color = Color.Green,
+            color = Color.Blue,
             shape = RoundedCornerShape(10.dp)
         )
     } else {
