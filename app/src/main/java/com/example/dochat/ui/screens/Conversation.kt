@@ -210,7 +210,7 @@ fun UserInput(
     // 用于决定是否显示键盘
     var textFieldFocusState by remember { mutableStateOf(false) }
 
-    Surface() {
+    Surface(tonalElevation = 2.dp) {
         Column() {
             userInputText(
                 textFieldValue = textState,
@@ -319,6 +319,7 @@ private fun UserInputSelector(
             .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Text("dddddddd")
         InputSelectorButton(
             onClick = { onSelectorChange(InputSelector.EMOJI) },
             icon = Icons.Outlined.Build,
@@ -366,21 +367,18 @@ private fun UserInputSelector(
             disabledContentColor = disabledContentColor
         )
 
-//        // Send button
-//        textButton(
-//            modifier = Modifier.height(24.dp),
-//            enabled = sendMessageEnabled,
-//            onClick = onMessageSent,
-//            colors = buttonColors,
-//            border = border,
-//            contentPadding = PaddingValues(0.dp)
-//        ) {
-//            Text(
-//                stringResource(id = R.string.send),
-//                modifier = Modifier.padding(horizontal = 16.dp),
-//                color = MaterialTheme.colors.background
-//            )
-//        }
+        // Send button
+        IconButton(
+            modifier = Modifier.height(24.dp),
+            enabled = sendMessageEnabled,
+            onClick = onMessageSent
+        ) {
+            Text(
+                "send",
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = Color.Blue
+            )
+        }
     }
 }
 @Composable
@@ -390,14 +388,31 @@ private fun InputSelectorButton(
     description: String,
     selected: Boolean
 ) {
-//    val backgroundModifier = if (selected) {
-//        Modifier.background(
-//            color = Color.Green,
-//            shape = RoundedCornerShape(10.dp)
-//        )
-//    } else {
-//        Modifier
-//    }
+    val backgroundModifier = if (selected) {
+        Modifier.background(
+            color = Color.Green,
+            shape = RoundedCornerShape(10.dp)
+        )
+    } else {
+        Modifier
+    }
+
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.then(backgroundModifier)
+    ) {
+        val tint = if (selected) {
+            MaterialTheme.colorScheme.onSecondary
+        } else {
+            MaterialTheme.colorScheme.secondary
+        }
+        Icon(
+            icon,
+            tint = tint,
+            modifier = Modifier.padding(8.dp).size(56.dp),
+            contentDescription = description
+        )
+    }
 }
 
 @Composable
@@ -417,7 +432,7 @@ private fun SelectorExpanded(
         }
     }
 
-    Surface() {
+    Surface(tonalElevation = 2.dp) {
         when (currentSelector) {
             InputSelector.EMOJI -> EmojiTable(focusRequester = focusRequester)
             InputSelector.DM -> Text("这是DM")
