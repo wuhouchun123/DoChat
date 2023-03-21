@@ -16,7 +16,7 @@ data class Message(
     val timestamp: String,
     val content: String,
     val image: Int? = null,
-    val authorImage: Int = if (author == "me") R.drawable.music_knob else R.drawable.music_knob
+    val authorImage: Int = R.drawable.dorunto
 )
 
 

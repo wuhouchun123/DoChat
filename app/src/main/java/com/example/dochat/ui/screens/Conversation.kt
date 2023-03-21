@@ -46,6 +46,8 @@ import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
+import androidx.compose.ui.layout.FirstBaseline
+import androidx.compose.ui.layout.LastBaseline
 
 @Composable
 fun Conversation() {
@@ -62,10 +64,11 @@ fun ConversationContent(
 
     Column(
         Modifier
-            .fillMaxSize()
-            .padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             contentAlignment = Alignment.TopStart
         ) {
             Messages(
@@ -86,25 +89,74 @@ fun Messages(
     ) {
         for (index in messages.indices) {
             item {
-                Spacer(modifier = Modifier.height(10.dp))
-                Surface(
-                    color = Color.Green,
-                    modifier = Modifier.padding(16.dp, 8.dp),
-                    shape = ChatBubbleShape
+                Spacer(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(20.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp),
+                    verticalAlignment = Alignment.Top
                 ) {
+                    val borderColor = if (messages[index].author == "me") {
+                        Color.Blue
+                    } else {
+                        Color.Cyan
+                    }
+                    //头像
                     Box(
-                        modifier = Modifier.padding(16.dp,16.dp)
+                        modifier = Modifier.fillMaxHeight()
                     ) {
-                        Text(messages[index].content, style = MaterialTheme.typography.bodyLarge)
+                        Surface(
+                            shape = CircleShape,
+                            modifier = Modifier
+                        ) {
+                            Image(
+                                modifier = Modifier
+                                    .clickable(onClick = {  })
+                                    .padding(horizontal = 0.dp)
+                                    .size(48.dp)
+                                    .border(1.5.dp, borderColor, CircleShape)
+                                    .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                                    .clip(CircleShape),
+                                painter = painterResource(id = messages[index].authorImage),
+                                contentScale = ContentScale.Crop,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    //名字，时间和内容
+                    Column() {
+                        Row(modifier = Modifier.semantics(mergeDescendants = true) {}) {
+                            Text(
+                                text = messages[index].author,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier
+                                    .alignBy(LastBaseline)
+                                    .paddingFrom(LastBaseline, after = 8.dp) // Space to 1st bubble
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = messages[index].timestamp,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.alignBy(LastBaseline),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Surface(
+                            color = Color.Green,
+                            shape = ChatBubbleShape,
+                            modifier = Modifier.padding(end = 16.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.padding(16.dp,16.dp)
+                            ) {
+                                Text(messages[index].content, style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
                     }
                 }
-                Text(
-                    messages[index].author,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-
             }
         }
     }
@@ -296,7 +348,7 @@ fun userInputText(
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .padding(start = 32.dp),
-                        text = "Message #composer",
+                        text = "Message #composergit ",
                         color = Color(0x33222222)
                     )
                 }
@@ -410,7 +462,9 @@ private fun InputSelectorButton(
         Icon(
             icon,
             tint = tint,
-            modifier = Modifier.padding(8.dp).size(56.dp),
+            modifier = Modifier
+                .padding(8.dp)
+                .size(56.dp),
             contentDescription = description
         )
     }
