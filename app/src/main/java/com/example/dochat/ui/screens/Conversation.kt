@@ -156,7 +156,7 @@ fun Message(
     val spaceBetweenAuthors = if (isLastMessageByAuthor) Modifier.padding(top = 8.dp) else Modifier
     Row(modifier = spaceBetweenAuthors) {
         val borderColor = when(msg.author) {
-            "me" -> Color.Blue
+            "medo" -> Color.Blue
             "妈妈" -> Color.Yellow
             "瑞青" -> Color.Magenta
             else -> Color.Blue
