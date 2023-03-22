@@ -9,12 +9,16 @@ val initialMessages = listOf(
     Message(
         author = "me",
         timestamp = "8:07 PM",
-        content = "你好啊，代码的世界。"
+        content = "加油吧少年" +
+                "加油吧大叔" +
+                "加油吧骚年 \uD83D\uDC49" +
+                "https://github.com/android/compose-samples/tree/master/JetNews"
     ),
     Message(
         author = "me",
         timestamp = "8:06 PM",
-        content = "what are you 弄啥捏"
+        content = "what are you 弄啥捏",
+        image = R.drawable.yue
     ),
     Message(
         author = "me",
@@ -24,7 +28,10 @@ val initialMessages = listOf(
     Message(
         author = "瑞青",
         timestamp = "8:04 PM",
-        content = "我是个臭驴",
+        content = "我是个臭驴" + "加油吧少年" +
+                "加油吧大叔" +
+                "加油吧骚年 \uD83D\uDC49" +
+                "https://github.com/android/compose-samples/tree/master/JetNews",
         authorImage = R.drawable.rui
     ),
     Message(

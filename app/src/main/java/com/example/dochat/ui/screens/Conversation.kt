@@ -10,9 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -48,6 +51,10 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.layout.LastBaseline
+import androidx.compose.ui.platform.LocalUriHandler
+import com.example.dochat.ui.components.SymbolAnnotationType
+import com.example.dochat.ui.components.messageFormatter
+import kotlinx.coroutines.launch
 
 @Composable
 fun Conversation() {
@@ -60,8 +67,8 @@ fun ConversationContent(
     modifier: Modifier = Modifier,
     uiState: ConversationUiState
 ) {
-
-
+    val scope = rememberCoroutineScope()
+    val scrollState = rememberLazyListState()
     Column(
         Modifier
             .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -72,18 +79,39 @@ fun ConversationContent(
             contentAlignment = Alignment.TopStart
         ) {
             Messages(
-                messages = uiState.initialMessages
+                messages = uiState.initialMessages,
+                scrollState = scrollState
             )
         }
         UserInput(
+            onMessageSent = { content ->
+//                println(content)
+                uiState.addMessage(
+                    Message(
+                        author = "me",
+                        timestamp = "10:10",
+                        content = content
+                    )
+                )
+            },
+            resetScroll = {
+                scope.launch {
+                    scrollState.scrollToItem(0)
+                }
+            },
         )
     }
 }
 
 @Composable
 fun Messages(
-    messages: List<Message>
+    messages: List<Message>,
+    scrollState: LazyListState
 ) {
+//    val scope = rememberCoroutineScope()
+    LaunchedEffect(messages){
+        println(messages)
+    }
     LazyColumn(
         reverseLayout = true
     ) {
@@ -96,7 +124,13 @@ fun Messages(
             val isLastMessageByAuthor = nextAuthor != message.author
 
             item {
-                Message(msg = message, isUserMe = isUserMe, isFirstMessageByAuthor, isLastMessageByAuthor)
+                Message(
+                    onAuthorClick = {  },
+                    msg = message,
+                    isUserMe = isUserMe,
+                    isFirstMessageByAuthor,
+                    isLastMessageByAuthor
+                )
             }
         }
     }
@@ -106,6 +140,7 @@ private val ChatBubbleShape = RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp)
 
 @Composable
 fun Message(
+    onAuthorClick: (String) -> Unit,
     msg: Message,
     isUserMe: Boolean,
     isFirstMessageByAuthor: Boolean,
@@ -153,7 +188,9 @@ fun Message(
             isLastMessageByAuthor,
             modifier = Modifier
                 .padding(end = 16.dp)
-                .weight(1f))
+                .weight(1f),
+            authorClicked = onAuthorClick
+        )
     }
 }
 
@@ -163,9 +200,11 @@ fun AuthorAndTextMessage(
     isUserMe: Boolean,
     isFirstMessageByAuthor: Boolean,
     isLastMessageByAuthor: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    authorClicked: (String) -> Unit
 ) {
     Column(modifier = modifier) {
+        //名字和时间
         Row(modifier = Modifier.semantics(mergeDescendants = true) {}) {
             if (isLastMessageByAuthor) {
                 Text(
@@ -184,7 +223,12 @@ fun AuthorAndTextMessage(
                 )
             }
         }
-        ChatItemBubble(msg, isUserMe, modifier = Modifier.padding(end = 16.dp).weight(1f))
+        //聊天气泡
+        ChatItemBubble(msg, isUserMe, modifier = Modifier
+            .padding(end = 16.dp)
+            .weight(1f), authorClicked = authorClicked)
+
+        //消息的间距
         if (isFirstMessageByAuthor) {
             // Last bubble before next author
             Spacer(modifier = Modifier.height(8.dp))
@@ -200,17 +244,13 @@ fun AuthorAndTextMessage(
 fun ChatItemBubble(
     msg: Message,
     isUserMe: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    authorClicked: (String) -> Unit
 ) {
     val backgroundBubbleColor = if (isUserMe) {
         Color(0xFF1546F6)
     } else {
         Color(0xFFE2E1EC)
-    }
-    val fontColor = if (isUserMe) {
-        Color.White
-    } else {
-        Color.Black
     }
 
     Surface(
@@ -220,13 +260,69 @@ fun ChatItemBubble(
         Box(
             modifier = Modifier.padding(16.dp,16.dp)
         ) {
-            Text(
-                msg.content,
-                style = MaterialTheme.typography.bodyLarge,
-                color = fontColor
+            ClickableMessage(
+                message = msg,
+                isUserMe = isUserMe,
+                authorClicked = authorClicked
             )
         }
     }
+
+    msg.image?.let{
+        Spacer(modifier = Modifier.height(4.dp))
+        Surface(
+            color = backgroundBubbleColor,
+            shape = ChatBubbleShape
+        ) {
+            Box(
+                modifier = Modifier.padding(16.dp,16.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = msg.image),
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(160.dp),
+                    contentDescription = "img"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ClickableMessage(
+    message: Message,
+    isUserMe: Boolean,
+    authorClicked: (String) -> Unit
+) {
+    val uriHandler = LocalUriHandler.current
+
+    val styledMessage = messageFormatter(
+        text = message.content,
+        primary = isUserMe
+    )
+
+    val fontColor = if (isUserMe) {
+        Color.White
+    } else {
+        Color.Black
+    }
+
+    ClickableText(
+        text = styledMessage,
+        style = MaterialTheme.typography.bodyLarge.copy(color = fontColor),
+        onClick = {
+            styledMessage
+                .getStringAnnotations(start = it, end = it)
+                .firstOrNull()
+                ?.let { annotation ->
+                    when (annotation.tag) {
+                        SymbolAnnotationType.LINK.name -> uriHandler.openUri(annotation.item)
+                        SymbolAnnotationType.PERSON.name -> authorClicked(annotation.item)
+                        else -> Unit
+                    }
+                }
+        }
+    )
 }
 
 enum class InputSelector {
@@ -240,6 +336,8 @@ enum class InputSelector {
 
 @Composable
 fun UserInput(
+    onMessageSent: (String) -> Unit,
+    resetScroll: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var currentInputSelector by rememberSaveable { mutableStateOf(InputSelector.NONE) }
@@ -262,7 +360,8 @@ fun UserInput(
                 focusState = textFieldFocusState,
                 onTextFieldFocused = { focused ->
                     if (focused) {
-                        //currentInputSelector = InputSelector.NONE
+                        currentInputSelector = InputSelector.NONE
+                        resetScroll()
                     }
                     textFieldFocusState = focused
                 },
@@ -272,10 +371,11 @@ fun UserInput(
                 onSelectorChange = { currentInputSelector = it },
                 sendMessageEnabled = textState.text.isNotBlank(),
                 onMessageSent = {
-//                    onMessageSent(textState.text)
+                    onMessageSent(textState.text)
                     // Reset text field and close keyboard
                     textState = TextFieldValue()
                     // Move scroll to bottom
+                    resetScroll()
                     dismissKeyboard()
                 },
                 currentInputSelector = currentInputSelector
@@ -419,7 +519,7 @@ private fun UserInputSelector(
         ) {
             Text(
                 "send",
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = 0.dp),
                 color = Color.Blue
             )
         }
